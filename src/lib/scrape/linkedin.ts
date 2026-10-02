@@ -145,7 +145,10 @@ async function viaPublicPage(url: string, publicId: string): Promise<LinkedInDat
     url,
     publicId,
     name: person.name ?? publicId,
-    headline: meta("og:title")?.split(" - ").slice(1).join(" - ") || (Array.isArray(person.jobTitle) ? person.jobTitle.join(", ") : person.jobTitle) || null,
+    headline:
+      (meta("og:title")?.split(" - ").slice(1).join(" - ") || (Array.isArray(person.jobTitle) ? person.jobTitle.join(", ") : person.jobTitle) || "")
+        .replace(/\s*\|\s*LinkedIn\s*$/i, "")
+        .trim() || null,
     about: person.description ?? meta("description"),
     location: person.address?.addressLocality ?? null,
     photoUrl: typeof person.image === "string" ? person.image : person.image?.contentUrl ?? null,

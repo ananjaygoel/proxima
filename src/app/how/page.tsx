@@ -42,7 +42,7 @@ export default function HowPage() {
               every photo).
             </p>
             <p className="mt-2 text-xs text-faint">
-              Scraped with Apify: <code>apify/instagram-profile-scraper</code>. Fallback: Instagram&apos;s public web profile endpoint. Private
+              Scraped with Apify: <code>apify/instagram-profile-scraper</code>. Fallback (best effort): Instagram&apos;s public web profile endpoint. Private
               accounts are refused. Photos are resized with <code>sharp</code> and stored, so the agent and the page see the same image.
             </p>
           </div>

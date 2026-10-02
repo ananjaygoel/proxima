@@ -112,7 +112,7 @@ async function viaWeb(url: string, username: string): Promise<InstagramData> {
     signal: AbortSignal.timeout(20_000),
   });
   if (res.status === 404) throw new Error(`Instagram @${username} doesn't exist.`);
-  if (!res.ok) throw new Error(`Instagram web endpoint refused (${res.status}); set APIFY_TOKEN for reliable reads.`);
+  if (!res.ok) throw new Error(`Instagram asked for a login (${res.status}). Proxima needs its Apify scraper configured to read Instagram.`);
   const j = (await res.json()) as Any;
   const u = j?.data?.user;
   if (!u) throw new Error(`Instagram @${username} could not be read.`);
