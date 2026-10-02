@@ -159,8 +159,12 @@ export function RankingsBoard({ people, ranks, initial, initialView }: { people:
 function Matrix({ people, ranks }: { people: PersonLite[]; ranks: Record<string, RankView[]> }) {
   const [hover, setHover] = useState<string | null>(null);
   const cell = (a: string, b: string) => (ranks[a] ?? []).find((r) => r.otherId === b);
+  // Stretch the colour scale over the scores actually present (5th to 95th percentile).
+  const all = people.flatMap((p) => (ranks[p.id] ?? []).map((r) => r.myFit)).sort((x, y) => x - y);
+  const lo = all[Math.floor(all.length * 0.05)] ?? 0;
+  const hi = all[Math.floor(all.length * 0.95)] ?? 100;
   const color = (v: number) => {
-    const t = Math.max(0, Math.min(1, (v - 20) / 70));
+    const t = Math.max(0, Math.min(1, (v - lo) / Math.max(1, hi - lo)));
     return `color-mix(in oklab, var(--rose) ${Math.round(t * 100)}%, var(--panel-2))`;
   };
   return (
@@ -213,7 +217,9 @@ function Matrix({ people, ranks }: { people: PersonLite[]; ranks: Record<string,
           ))}
         </tbody>
       </table>
-      <p className="mt-3 text-xs text-faint">Gold outline = they went on a full date. ♥ = both agents said yes.</p>
+      <p className="mt-3 text-xs text-faint">
+        Colour runs from the lowest score ({lo}) to the highest ({hi}). Gold outline = they went on a first date. ♥ = both agents said yes to a second date.
+      </p>
     </div>
   );
 }

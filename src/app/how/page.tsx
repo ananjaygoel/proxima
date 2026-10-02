@@ -108,7 +108,7 @@ export default function HowPage() {
         <ul className="mt-3 list-disc space-y-1.5 pl-5">
           <li>Most of the weight is on P&apos;s own agent, since it knows what P needs. The rest is on X&apos;s agent, because a match only works if it&apos;s mutual.</li>
           <li>Evidence from a first date replaces the speed date for that pair: more conversation, better judgment.</li>
-          <li>&ldquo;Mutual&rdquo; means both agents said yes.</li>
+          <li>&ldquo;Mutual&rdquo; means that after a first date, both agents said yes to a second one.</li>
           <li>Visitors who add themselves date the demo pool, but the demo season&apos;s own rankings never change.</li>
         </ul>
       </Section>

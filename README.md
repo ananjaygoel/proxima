@@ -85,7 +85,7 @@ score(P, X) = 0.65 × P's agent's fit for X  +  0.35 × X's agent's fit for P
 
 - Most of the weight is on P's own agent, because it knows what P needs. The rest is on X's agent, because a match only works if it goes both ways.
 - If a pair went on a first date, that evidence replaces the speed date.
-- **Mutual** = both agents said yes.
+- **Mutual** = after a first date, both agents said yes to a second one.
 - The Rankings page has a per-person view, a list of mutual matches, and a heatmap of every agent's view of every other person.
 
 ## Architecture

@@ -8,7 +8,7 @@ import type { Debrief, SpeedVerdict } from "./agent/schemas";
 //   score      = 0.65 * my view + 0.35 * their view
 // A full date outranks a speed date as evidence: if the pair had a full date,
 // only the latest full date counts; otherwise the speed date does.
-// "Mutual" = both agents said yes to a second (or first) date.
+// "Mutual" = after a first date, both agents said yes to a second one.
 
 export const MY_WEIGHT = 0.65;
 
@@ -74,7 +74,7 @@ export function rankingsFrom(dates: DoneDate[], allowed?: (personId: string, oth
         myFit,
         theirFit,
         evidence: d.kind,
-        mutual: myCall === "yes" && theirCall === "yes",
+        mutual: d.kind === "full" && myCall === "yes" && theirCall === "yes",
         myCall,
         theirCall,
         dateId: d.id,
