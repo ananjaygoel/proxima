@@ -106,6 +106,7 @@ export type PersonRow = {
   photo_image_id: string | null;
   creator_token: string | null;
   consent: boolean;
+  synthetic: boolean;
   created_at: string;
   updated_at: string;
 };

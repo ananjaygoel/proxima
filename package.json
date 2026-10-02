@@ -10,7 +10,9 @@
     "worker": "tsx --env-file-if-exists=.env.local scripts/worker.ts",
     "cli": "tsx --env-file-if-exists=.env.local scripts/cli.ts",
     "typecheck": "tsc --noEmit",
-    "fixtures": "tsx --env-file-if-exists=.env.local scripts/fixtures.ts"
+    "fixtures": "tsx --env-file-if-exists=.env.local scripts/fixtures.ts",
+    "synth:generate": "tsx --env-file-if-exists=.env.local scripts/synth/generate.ts",
+    "synth:upload": "tsx --env-file-if-exists=.env.local scripts/synth/upload.ts"
   },
   "dependencies": {
     "nanoid": "^6.0.1",

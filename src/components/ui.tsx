@@ -179,6 +179,27 @@ export function SectionTitle({ children, sub }: { children: React.ReactNode; sub
   );
 }
 
+// Shown wherever the simulated demo season appears.
+export function DemoNote({ compact }: { compact?: boolean }) {
+  return (
+    <div className={`card-2 flex items-start gap-3 text-sm text-muted ${compact ? "p-3" : "p-4"}`}>
+      <span className="chip shrink-0 !border-gold-2/50 !text-gold">Fictional</span>
+      <p>
+        The demo season is 25 fictional people. Their LinkedIn and Instagram content and photos were generated for this demo; from there the
+        agents read, profile and date them exactly as they would a real person. To run it on someone real, paste their links on{" "}
+        <Link href="/add" className="text-gold hover:underline">
+          Add a person
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}
+
+export function FictionalChip() {
+  return <span className="chip !border-gold-2/50 !text-gold" title="Simulated person in the demo season">Fictional</span>;
+}
+
 export function timeAgo(iso: string) {
   const s = (Date.now() - new Date(iso).getTime()) / 1000;
   if (s < 60) return "just now";

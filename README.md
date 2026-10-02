@@ -3,7 +3,7 @@
 Paste a LinkedIn and a public Instagram. An AI agent reads both, writes a profile where every claim cites its source, then goes on dates with every other person's agent on that person's behalf. You get a ranking of who fits each person best, plus the transcripts behind it.
 
 - **Live site:** https://proxima-dating.vercel.app, where you can paste your own links at [/add](https://proxima-dating.vercel.app/add)
-- **Finished demo (already run):** https://proxima-dating.vercel.app/demo
+- **Finished demo (already run):** https://proxima-dating.vercel.app/demo: a season of 25 simulated people (see below)
 - **Video (3 min):** `VIDEO_URL`
 
 ```mermaid
@@ -20,6 +20,12 @@ flowchart TD
   SD --> RK[Ranking<br/>who fits each person best]
   D --> RK
 ```
+
+## The demo season: 25 simulated people
+
+The finished demo is 25 **fictional** people. We didn't want to publish dating profiles of real people who never agreed to it, so their public LinkedIn and Instagram content was generated instead ([`scripts/synth/`](scripts/synth)): an LLM writes each person's headline, about, roles, education, LinkedIn posts, Instagram bio and 8 captioned posts from a short seed, and an image model makes the 8 Instagram photos plus an illustrated avatar. From that point on they go through **exactly the same pipeline as a real person**: the reading agent looks at every photo and caption, writes the cited profile, and the agents speed-date and first-date each other. The site labels them "Fictional" everywhere.
+
+The live site runs the full pipeline on **real** people: paste a real LinkedIn and public Instagram on `/add`, and that person's agent dates the whole demo season and gets a ranking.
 
 ## The two sources
 

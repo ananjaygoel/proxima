@@ -174,21 +174,34 @@ CREATE TABLE IF NOT EXISTS rate (
   count int NOT NULL DEFAULT 0,
   PRIMARY KEY (key, day)
 );
+
+-- v2: simulated demo people
+ALTER TABLE people ADD COLUMN IF NOT EXISTS synthetic boolean NOT NULL DEFAULT false;
 `;
+
+// Bump when SCHEMA changes; every statement above must stay idempotent.
+const SCHEMA_VERSION = "2";
 
 export function ensureSchema(): Promise<void> {
   if (!globalForDb.__proximaSchema) {
     globalForDb.__proximaSchema = (async () => {
       const c = await pool().connect();
       try {
-        // Fast path: schema already there (every warm deployment).
-        const r = await c.query(`SELECT to_regclass('public.rate') IS NOT NULL AS ok`);
-        if (r.rows[0]?.ok) return;
+        // Fast path: schema already at this version (every warm deployment).
+        const r = await c.query(
+          `SELECT CASE WHEN to_regclass('public.meta') IS NULL THEN NULL ELSE (SELECT value->>'v' FROM meta WHERE key='schema') END AS v`,
+        );
+        if (r.rows[0]?.v === SCHEMA_VERSION) return;
         // First boot: serialise concurrent cold starts with a transaction-scoped
         // lock (session locks don't survive Neon's transaction pooler).
         await c.query("BEGIN");
         await c.query("SELECT pg_advisory_xact_lock(424243)");
         await c.query(SCHEMA);
+        await c.query(
+          `INSERT INTO meta (key, value, updated_at) VALUES ('schema', jsonb_build_object('v', $1::text), now())
+           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+          [SCHEMA_VERSION],
+        );
         await c.query("COMMIT");
       } catch (e) {
         await c.query("ROLLBACK").catch(() => {});

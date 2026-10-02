@@ -1,3 +1,4 @@
+import { DemoNote } from "@/components/ui";
 import { rankingsView } from "@/lib/views";
 import { RankingsBoard } from "./board";
 
@@ -14,6 +15,11 @@ export default async function RankingsPage({ searchParams }: { searchParams: Pro
         For every person, who fits them best, after their agent dated everyone. Score = 65% their own agent&apos;s verdict + 35% the other agent&apos;s
         verdict on them, taken from the most in-depth date the two had (a full date beats a speed date).
       </p>
+      {v.people.some((p) => p.synthetic) ? (
+        <div className="mt-4">
+          <DemoNote compact />
+        </div>
+      ) : null}
       <RankingsBoard people={v.people} ranks={v.ranks} initial={sp.p ?? null} initialView={sp.view === "matrix" ? "matrix" : sp.view === "mutual" ? "mutual" : "person"} />
     </div>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Avatar } from "@/components/ui";
+import { Avatar, DemoNote } from "@/components/ui";
 import { q } from "@/lib/db";
 import { roster, stats } from "@/lib/views";
 
@@ -42,11 +42,16 @@ export default async function DemoPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <p className="label">The demo season</p>
-      <h1 className="h-serif mt-2 text-4xl">{demo.length} real people. Their agents already went out.</h1>
+      <h1 className="h-serif mt-2 text-4xl">{demo.length} people. Their agents already went out.</h1>
       <p className="mt-3 max-w-3xl text-lg text-muted">
         Each person was added as two links: a LinkedIn and a public Instagram. Their agents read them, wrote their profiles, went on {s.speed} speed
         dates and {s.full} first dates, and ranked who fits each person best. Nothing here needs typing; follow the steps.
       </p>
+      {demo.some((p) => p.synthetic) ? (
+        <div className="mt-6">
+          <DemoNote />
+        </div>
+      ) : null}
       <div className="mt-10 grid gap-4 md:grid-cols-2">
         <Step n="1" title="Meet the people" href="/people" text="All the people in the season, each with their own agent." />
         <Step

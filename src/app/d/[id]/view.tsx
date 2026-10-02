@@ -87,6 +87,9 @@ export function DateView({ initial, a, b, needsA, needsB }: { initial: DateRow; 
           ) : d.kind === "speed" ? (
             <div className="text-sm text-muted">Proxima speed-dating night · four minutes, two messages each</div>
           ) : null}
+          {a.synthetic || b.synthetic ? (
+            <p className="max-w-2xl text-xs text-gold/80">Demo season: fictional people with generated LinkedIn and Instagram content. The date itself is real agent output.</p>
+          ) : null}
           <p className="max-w-2xl text-xs text-faint">
             Each agent knows only its own person&apos;s profile and the other person&apos;s public card. Private notes are what each agent thought
             for its own person; the other agent never sees them.

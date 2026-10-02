@@ -123,7 +123,19 @@ export default function HowPage() {
         </ul>
       </Section>
 
-      <Section n="6" title="Tech stack" id="stack">
+      <Section n="6" title="The demo season" id="demo">
+        <p>
+          The finished demo is 25 fictional people. We didn&apos;t want to publish dating profiles of real people who never agreed, so their
+          LinkedIn and Instagram content and photos were generated for the demo. From there they went through exactly the same pipeline as a real
+          person: read, profiled, speed-dated, first-dated and ranked. Real links pasted on{" "}
+          <Link href="/add" className="text-gold hover:underline">
+            Add a person
+          </Link>{" "}
+          run the same pipeline on a real person, whose agent then dates the whole demo season.
+        </p>
+      </Section>
+
+      <Section n="7" title="Tech stack" id="stack">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>Next.js 16 (App Router, TypeScript, Tailwind) on Vercel.</li>
           <li>Postgres (Neon): people, sources, photos, reading notes, profiles, dates, and a job queue (FOR UPDATE SKIP LOCKED).</li>

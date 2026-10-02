@@ -17,6 +17,7 @@ export type PersonLite = {
   status: PersonRow["status"];
   cohort: PersonRow["cohort"];
   tagline: string | null;
+  synthetic: boolean;
 };
 
 export function lite(p: PersonRow, prof?: Profile | null): PersonLite {
@@ -30,6 +31,7 @@ export function lite(p: PersonRow, prof?: Profile | null): PersonLite {
     status: p.status,
     cohort: p.cohort,
     tagline: prof?.tagline ?? null,
+    synthetic: !!p.synthetic,
   };
 }
 

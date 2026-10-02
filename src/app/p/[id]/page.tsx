@@ -12,6 +12,8 @@ import {
   LinkedInIcon,
   ScoreRing,
   SectionTitle,
+  DemoNote,
+  FictionalChip,
   StatusPill,
   anchorFor,
 } from "@/components/ui";
@@ -59,18 +61,32 @@ export default async function PersonPage({ params, searchParams }: Props) {
             <h1 className="h-serif text-4xl">{me.name}</h1>
             <StatusPill status={v.display} />
             {person.cohort === "guest" ? <span className="chip">visitor</span> : null}
+            {person.synthetic ? <FictionalChip /> : null}
           </div>
           {profile ? <p className="mt-1 text-lg italic text-gold">“{profile.tagline}”</p> : null}
           <p className="mt-1 text-sm text-muted">
             {[person.headline, me.city, profile?.life_stage.label, profile && profile.pronouns !== "not stated" ? profile.pronouns : null].filter(Boolean).join(" · ")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <a href={person.linkedin_url} target="_blank" rel="noreferrer" className="chip !text-blue hover:!border-blue/50">
-              <LinkedInIcon /> LinkedIn ↗
-            </a>
-            <a href={person.instagram_url} target="_blank" rel="noreferrer" className="chip !text-rose hover:!border-rose/50">
-              <InstagramIcon /> @{person.instagram_username} ↗
-            </a>
+            {person.synthetic ? (
+              <>
+                <Link href={`/p/${id}?tab=sources`} className="chip !text-blue hover:!border-blue/50">
+                  <LinkedInIcon /> LinkedIn (simulated)
+                </Link>
+                <Link href={`/p/${id}?tab=sources`} className="chip !text-rose hover:!border-rose/50">
+                  <InstagramIcon /> @{person.instagram_username} (simulated)
+                </Link>
+              </>
+            ) : (
+              <>
+                <a href={person.linkedin_url} target="_blank" rel="noreferrer" className="chip !text-blue hover:!border-blue/50">
+                  <LinkedInIcon /> LinkedIn ↗
+                </a>
+                <a href={person.instagram_url} target="_blank" rel="noreferrer" className="chip !text-rose hover:!border-rose/50">
+                  <InstagramIcon /> @{person.instagram_username} ↗
+                </a>
+              </>
+            )}
           </div>
         </div>
         {ranking[0] ? (
@@ -85,6 +101,12 @@ export default async function PersonPage({ params, searchParams }: Props) {
           </Link>
         ) : null}
       </div>
+
+      {person.synthetic ? (
+        <div className="mt-6">
+          <DemoNote compact />
+        </div>
+      ) : null}
 
       <div className="mt-6">
         <LiveProgress
@@ -458,7 +480,7 @@ function SourcesTab({ v }: { v: NonNullable<Awaited<ReturnType<typeof personView
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="card p-5">
         <div className="mb-4 flex items-center gap-2 text-blue">
-          <LinkedInIcon size={16} /> <span className="font-semibold">LinkedIn, as the agent received it</span>
+          <LinkedInIcon size={16} /> <span className="font-semibold">{v.person.synthetic ? "Simulated LinkedIn" : "LinkedIn"}, as the agent received it</span>
         </div>
         {li ? (
           <div className="space-y-4 text-sm">
@@ -487,7 +509,7 @@ function SourcesTab({ v }: { v: NonNullable<Awaited<ReturnType<typeof personView
       </div>
       <div className="card p-5">
         <div className="mb-4 flex items-center gap-2 text-rose">
-          <InstagramIcon size={16} /> <span className="font-semibold">Instagram, as the agent received it</span>
+          <InstagramIcon size={16} /> <span className="font-semibold">{v.person.synthetic ? "Simulated Instagram" : "Instagram"}, as the agent received it</span>
         </div>
         {ig ? (
           <>

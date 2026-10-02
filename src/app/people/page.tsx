@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Avatar, ScoreRing, StatusPill } from "@/components/ui";
+import { Avatar, DemoNote, ScoreRing, StatusPill } from "@/components/ui";
 import { roster } from "@/lib/views";
 
 export const dynamic = "force-dynamic";
@@ -15,13 +15,18 @@ export default async function PeoplePage() {
         <div>
           <h1 className="h-serif text-4xl">The people</h1>
           <p className="mt-1 text-muted">
-            {demo.length} real people in the demo season, each represented by their own agent. Every one of them is two links: a LinkedIn and a public Instagram.
+            {demo.length} people in the demo season, each represented by their own agent. Every one of them is two sources: a LinkedIn and a public Instagram.
           </p>
         </div>
         <Link href="/add" className="btn">
           Add a person
         </Link>
       </div>
+      {demo.some((p) => p.synthetic) ? (
+        <div className="mt-6">
+          <DemoNote />
+        </div>
+      ) : null}
       <Grid people={demo} />
       {guests.length ? (
         <>
