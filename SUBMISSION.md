@@ -9,6 +9,8 @@
 | Live website (paste your own links) | https://proxima-dating.vercel.app/add |
 | GitHub (public) | https://github.com/ananjaygoel/proxima |
 
+The demo season is 25 simulated people: their LinkedIn and Instagram content and photos were generated (an LLM plus an image model), so no real person's dating profile is published without consent. From there they go through the same pipeline as anyone else. The live site runs end to end on real links.
+
 ## Overall explanation (200 characters)
 
 > Paste a LinkedIn + public Instagram. An AI agent reads both, writes a cited profile of needs and interests, then speed-dates and first-dates every other agent for that person and ranks best fits.
