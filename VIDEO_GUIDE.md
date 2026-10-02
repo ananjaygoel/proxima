@@ -4,7 +4,7 @@ The graders want three things on screen, in this order: **profile pages first, t
 
 ## Before you record
 
-- Season finished: 25+ people, all **Ranked**, rankings filled in.
+- Season finished: 25+ people, all **Ranked**, rankings filled in. People join through the invite link (`/add?invite=<INVITE_CODE>`); the season books its own dates as they arrive. Allow about 40 minutes after the 25th person joins for all speed dates and first dates to finish. `/admin` shows the queue.
 - Browser window about 1440×900, page zoom 110–125%, bookmarks bar hidden, notifications off (Focus mode).
 - Pick in advance:
   - **Person A**, whose profile you'll show: rich Instagram, clear needs.
