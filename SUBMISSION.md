@@ -5,9 +5,9 @@
 | | |
 |---|---|
 | YouTube (≤ 3 min) | `VIDEO_URL` |
-| Demo link (finished example, already run) | `LIVE_URL/demo` |
-| Live website (paste your own links) | `LIVE_URL/add` |
-| GitHub (public) | `REPO_URL` |
+| Demo link (finished example, already run) | https://proxima-dating.vercel.app/demo |
+| Live website (paste your own links) | https://proxima-dating.vercel.app/add |
+| GitHub (public) | https://github.com/ananjaygoel/proxima |
 
 ## Overall explanation (200 characters)
 

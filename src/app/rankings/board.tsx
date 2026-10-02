@@ -9,9 +9,10 @@ type View = "person" | "mutual" | "matrix";
 
 export function RankingsBoard({ people, ranks, initial, initialView }: { people: PersonLite[]; ranks: Record<string, RankView[]>; initial: string | null; initialView: View }) {
   const ranked = people.filter((p) => (ranks[p.id] ?? []).length > 0);
-  const [sel, setSel] = useState<string | null>(initial && ranks[initial] ? initial : ranked[0]?.id ?? null);
+  const firstDemo = ranked.find((p) => p.cohort === "demo") ?? ranked[0];
+  const [sel, setSel] = useState<string | null>(initial && ranks[initial] ? initial : firstDemo?.id ?? null);
   const [view, setView] = useState<View>(initialView);
-  const [cohort, setCohort] = useState<"demo" | "guest">(people.find((p) => p.id === initial)?.cohort ?? "demo");
+  const [cohort, setCohort] = useState<"demo" | "guest">(ranked.find((p) => p.id === sel)?.cohort ?? "demo");
   const list = ranked.filter((p) => p.cohort === cohort);
   const me = people.find((p) => p.id === sel) ?? null;
 
@@ -51,7 +52,7 @@ export function RankingsBoard({ people, ranks, initial, initialView }: { people:
       {view === "person" ? (
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <div className="card max-h-[75vh] overflow-y-auto p-2 scrollbar-thin">
-            {ranked.some((p) => p.cohort === "guest") ? (
+            {ranked.some((p) => p.cohort === "guest") && ranked.some((p) => p.cohort === "demo") ? (
               <div className="mb-2 flex gap-1 p-1">
                 {(["demo", "guest"] as const).map((c) => (
                   <button key={c} onClick={() => setCohort(c)} className={`chip flex-1 justify-center ${cohort === c ? "!border-gold-2 !text-gold" : ""}`}>

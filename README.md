@@ -2,8 +2,8 @@
 
 Paste a LinkedIn and a public Instagram. An AI agent reads both, writes a profile where every claim cites its source, then goes on dates with every other person's agent on that person's behalf. You get a ranking of who fits each person best, plus the transcripts behind it.
 
-- **Live site:** `LIVE_URL`, where you can paste your own links
-- **Finished demo (already run):** `LIVE_URL/demo`
+- **Live site:** https://proxima-dating.vercel.app, where you can paste your own links at [/add](https://proxima-dating.vercel.app/add)
+- **Finished demo (already run):** https://proxima-dating.vercel.app/demo
 - **Video (3 min):** `VIDEO_URL`
 
 ```mermaid
@@ -108,21 +108,24 @@ npm install
 cp .env.example .env.local   # add OPENAI_API_KEY, APIFY_TOKEN, ADMIN_KEY
 npm run dev                  # http://localhost:3000
 npm run worker               # in a second terminal: drains the job queue
-
-# against production (after `vercel env pull .env.production.local`):
-npm run worker:prod
-npm run cli:prod -- status
 ```
 
-Run a season:
+### How the demo season fills itself
+
+People join the demo by opening an invite link, `/add?invite=<INVITE_CODE>`, and adding their own two links (with consent). As each person's profile is written, their agent books speed dates with everyone already in the season. When the speed dates settle, first dates are booked for each person's top picks. No one has to press anything. `/admin` (with `ADMIN_KEY`) adds people in bulk, shows the queue and the model spend, and retries failures.
+
+Locally, the same flow runs with the worker:
 
 ```bash
 npm run cli -- add-bulk people.txt   # one "linkedin-url instagram-url" per line
-npm run worker                       # scrape + read everyone
-npm run cli -- season                # book all speed dates; first dates follow automatically
+npm run worker                       # scrape, read, then date (the season books itself)
 npm run cli -- status                # progress
 npm run cli -- cost                  # token spend so far
 ```
+
+## Cost (measured, gpt-6.1-sol)
+
+About $0.02 per speed date, $0.08 per first date and $0.15 to read a person (photos included), with each agent's dossier billed at the cached-input rate after its first call. A 25-person season (300 speed dates, ~50 first dates) comes to roughly $15. A visitor who adds themselves costs about $1. Daily caps on visitors and live dates are configurable.
 
 ## Privacy
 

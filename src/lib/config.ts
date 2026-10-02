@@ -30,13 +30,13 @@ export const config = {
   speedDateTurns: num("SPEED_DATE_TURNS", 4),
 
   // Worker tuning.
-  workerConcurrency: num("WORKER_CONCURRENCY", 6),
+  workerConcurrency: num("WORKER_CONCURRENCY", 8),
   tickBudgetMs: num("TICK_BUDGET_MS", 250_000),
 
   // Abuse / spend guards for the public site.
-  guestDailyLimitPerIp: num("GUEST_DAILY_LIMIT_PER_IP", 4),
-  guestDailyLimitGlobal: num("GUEST_DAILY_LIMIT_GLOBAL", 60),
-  liveDateDailyLimitGlobal: num("LIVE_DATE_DAILY_LIMIT_GLOBAL", 150),
+  guestDailyLimitPerIp: num("GUEST_DAILY_LIMIT_PER_IP", 3),
+  guestDailyLimitGlobal: num("GUEST_DAILY_LIMIT_GLOBAL", 40),
+  liveDateDailyLimitGlobal: num("LIVE_DATE_DAILY_LIMIT_GLOBAL", 100),
 
   adminKey: process.env.ADMIN_KEY ?? "",
   // Share /add?invite=<code> with friends who agreed to be in the demo season.

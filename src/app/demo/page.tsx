@@ -18,6 +18,27 @@ export default async function DemoPage() {
   const ex = demo[0];
   const byId = new Map(people.map((p) => [p.id, p]));
   const bd = best[0];
+  if (demo.length < 2) {
+    const joined = people.filter((p) => p.cohort === "demo").length;
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
+        <p className="label">The demo season</p>
+        <h1 className="h-serif mt-2 text-4xl">The season is filling up</h1>
+        <p className="mt-3 text-lg text-muted">
+          {joined} {joined === 1 ? "person has" : "people have"} joined so far. As each person joins, their agent reads them and starts dating
+          everyone already here, with no one pressing a button.
+        </p>
+        <div className="mt-8 flex justify-center gap-3">
+          <Link href="/add" className="btn">
+            Try it with your own links
+          </Link>
+          <Link href="/how" className="btn-ghost">
+            How it works
+          </Link>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <p className="label">The demo season</p>

@@ -10,9 +10,7 @@
     "worker": "tsx --env-file-if-exists=.env.local scripts/worker.ts",
     "cli": "tsx --env-file-if-exists=.env.local scripts/cli.ts",
     "typecheck": "tsc --noEmit",
-    "fixtures": "tsx --env-file-if-exists=.env.local scripts/fixtures.ts",
-    "worker:prod": "tsx --env-file=.env.production.local scripts/worker.ts",
-    "cli:prod": "tsx --env-file=.env.production.local scripts/cli.ts"
+    "fixtures": "tsx --env-file-if-exists=.env.local scripts/fixtures.ts"
   },
   "dependencies": {
     "nanoid": "^6.0.1",

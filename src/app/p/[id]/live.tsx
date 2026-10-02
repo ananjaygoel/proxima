@@ -57,6 +57,11 @@ export function LiveProgress({
     const poll = async () => {
       try {
         const r = await fetch(`/api/people/${personId}/status?after=${lastId.current}`, { cache: "no-store" });
+        if (r.status === 404) {
+          alive = false;
+          clearInterval(t);
+          return;
+        }
         if (!r.ok) return;
         const j = (await r.json()) as Status;
         if (!alive) return;
@@ -73,8 +78,8 @@ export function LiveProgress({
         lastFull.current = fullDone;
       } catch {}
     };
-    poll();
     const t = setInterval(poll, 1500);
+    poll();
     return () => {
       alive = false;
       clearInterval(t);
