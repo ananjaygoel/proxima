@@ -38,7 +38,7 @@ The actors are called through Apify's REST API (`run-sync-get-dataset-items`) fr
 
 ## How an agent reads a person
 
-[`src/lib/agent/read.ts`](src/lib/agent/read.ts) makes three Claude calls (Opus 5.5, structured outputs validated with Zod):
+[`src/lib/agent/read.ts`](src/lib/agent/read.ts) makes three model calls (OpenAI `gpt-6.1-sol`, strict structured outputs validated with Zod), split into two jobs (read, then write the profile):
 
 1. **LinkedIn pass.** Every item is labelled with a ref (`li:about`, `li:exp:0`, `li:post:2`, …). The agent writes 8–14 notes, each with a verbatim quote and what that item says about the person as a partner.
 2. **Instagram pass, with vision.** Each post goes in as caption, metadata and the photo itself (`ig:post:5`). The agent first describes what is actually in each photo, then writes notes across the bio, captions, photos and the grid as a whole.
@@ -88,7 +88,7 @@ score(P, X) = 0.65 × P's agent's fit for X  +  0.35 × X's agent's fit for P
 - **Postgres** (Neon in production): people, sources, photos, reading notes, profiles, dates (turns stored as JSONB and appended live), token usage, and a **job queue**.
 - **Job queue** ([`src/lib/jobs.ts`](src/lib/jobs.ts)): `scrape → read → plan → speed_date… → full_date…`. Workers claim jobs with `FOR UPDATE SKIP LOCKED` under a lease, so any number of workers can drain it in parallel and a crashed job is picked up again.
 - **Workers**: `/api/tick` runs the worker inside a Vercel function for up to about 4.5 minutes and re-invokes itself while jobs remain. Pages that are being watched start a tick if no worker heartbeat is recent. For a whole season, `npm run worker` drains the same queue from a laptop with no time limit.
-- **Claude** through `@anthropic-ai/sdk`: `client.beta.messages.parse` with Zod output schemas, `effort` per stage (`high` for the profile, `medium` for reading and debriefs, `low` for date turns), server-side refusal fallback, and **prompt caching of each agent's dossier**: an agent reads its own system prompt from cache on every turn of every date after the first.
+- **OpenAI** through the `openai` SDK: `client.responses.parse` with Zod output schemas (`zodTextFormat`, strict), vision for Instagram photos, `reasoning.effort` per stage (`medium` for reading, the profile and debriefs, `low` for date turns), and **prompt caching of each agent's dossier**: every call an agent makes starts with the same instructions and carries `prompt_cache_key: agent:<id>`, so its dossier is billed at the cached rate on every turn of every date after the first. Models are configurable per stage (`MODEL_READ`, `MODEL_DATE`, `MODEL_SPEED`, `MODEL_DEBRIEF`).
 
 ```
 src/
@@ -105,7 +105,7 @@ scripts/           worker.ts, cli.ts (add-bulk, season, status, cost), fixtures.
 ```bash
 brew install postgresql@17 && brew services start postgresql@17 && createdb proxima
 npm install
-cp .env.example .env.local   # add ANTHROPIC_API_KEY, APIFY_TOKEN, ADMIN_KEY
+cp .env.example .env.local   # add OPENAI_API_KEY, APIFY_TOKEN, ADMIN_KEY
 npm run dev                  # http://localhost:3000
 npm run worker               # in a second terminal: drains the job queue
 

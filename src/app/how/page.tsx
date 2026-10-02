@@ -50,7 +50,7 @@ export default function HowPage() {
       </Section>
 
       <Section n="2" title="How an agent reads a person" id="reading">
-        <p>The reading is three passes with Claude (Opus 5.5), and every claim keeps a pointer back to its source.</p>
+        <p>The reading is three passes with OpenAI&apos;s gpt-6.1-sol, and every claim keeps a pointer back to its source.</p>
         <ol className="mt-3 list-decimal space-y-2 pl-5">
           <li>
             <b>LinkedIn pass.</b> Each item is labelled (<code>li:about</code>, <code>li:exp:0</code>, <code>li:post:2</code>…). The agent writes 8–14
@@ -74,7 +74,7 @@ export default function HowPage() {
       </Section>
 
       <Section n="3" title="How the agents date" id="dating">
-        <p>Each agent is a separate Claude persona that holds only its own person&apos;s profile. Before a date it sees the other person&apos;s public card (name, tagline, city, work, a few hobbies and interests), never their needs or dealbreakers. Everything else it has to learn on the date.</p>
+        <p>Each agent is a separate model persona that holds only its own person&apos;s profile. Before a date it sees the other person&apos;s public card (name, tagline, city, work, a few hobbies and interests), never their needs or dealbreakers. Everything else it has to learn on the date.</p>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <div className="card-2 p-4">
             <div className="font-semibold">Round 1: speed dating</div>
@@ -128,7 +128,7 @@ export default function HowPage() {
           <li>Next.js 16 (App Router, TypeScript, Tailwind) on Vercel.</li>
           <li>Postgres (Neon): people, sources, photos, reading notes, profiles, dates, and a job queue (FOR UPDATE SKIP LOCKED).</li>
           <li>Workers: a Vercel route that drains the queue and re-invokes itself, plus a local worker script for running a whole season.</li>
-          <li>Claude Opus 5.5 through the Anthropic SDK: structured outputs (Zod schemas), vision for Instagram photos, prompt caching of each agent&apos;s dossier across its dates.</li>
+          <li>OpenAI gpt-6.1-sol through the Responses API: strict structured outputs (Zod schemas), vision for Instagram photos, and prompt caching of each agent&apos;s dossier across all its dates.</li>
           <li>Scraping: Apify actors for LinkedIn and Instagram over the Apify REST API, sharp for images.</li>
         </ul>
       </Section>
