@@ -8,7 +8,7 @@ function num(name: string, fallback: number): number {
 }
 
 export const config = {
-  databaseUrl: process.env.DATABASE_URL ?? "postgres://localhost:5432/proxima",
+  databaseUrl: process.env.DATABASE_URL || "postgres://localhost:5432/proxima",
 
   apifyToken: process.env.APIFY_TOKEN ?? "",
 

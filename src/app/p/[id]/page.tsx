@@ -92,7 +92,7 @@ export default async function PersonPage({ params, searchParams }: Props) {
           initialStatus={person.status}
           refImages={refImages}
           names={names}
-          showNotes={tab !== "reading"}
+          showNotes
           canRetry={canEdit}
         />
       </div>
@@ -118,8 +118,16 @@ export default async function PersonPage({ params, searchParams }: Props) {
       </div>
 
       <div className="mt-6">
-        {tab === "profile" ? profile ? <ProfileTab id={id} p={profile} refImages={refImages} /> : <Waiting what="The profile appears here as soon as the agent finishes reading." /> : null}
-        {tab === "reading" ? <ReadingTab notes={notes} refImages={refImages} via={[sources.linkedinVia, sources.instagramVia]} /> : null}
+        {tab === "profile" ? (
+          profile ? (
+            <ProfileTab id={id} p={profile} refImages={refImages} />
+          ) : ["queued", "scraping", "reading"].includes(person.status) ? null : (
+            <Waiting what="The profile appears here as soon as the agent finishes reading." />
+          )
+        ) : null}
+        {tab === "reading" && !["queued", "scraping", "reading"].includes(person.status) ? (
+          <ReadingTab notes={notes} refImages={refImages} via={[sources.linkedinVia, sources.instagramVia]} />
+        ) : null}
         {tab === "sources" ? <SourcesTab v={v} /> : null}
         {tab === "dates" ? <DatesTab id={id} dates={dates} /> : null}
         {tab === "ranking" ? <RankingTab first={me.first} ranking={ranking} /> : null}

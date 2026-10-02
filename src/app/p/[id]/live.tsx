@@ -40,9 +40,17 @@ export function LiveProgress({
   const router = useRouter();
   const [s, setS] = useState<Status | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [shown, setShown] = useState(0);
   const lastId = useRef(0);
   const lastStatus = useRef(initialStatus);
   const lastFull = useRef(-1);
+
+  // Reveal notes one at a time, so a pass that lands all at once still reads like the agent working through it.
+  useEffect(() => {
+    if (shown >= notes.length) return;
+    const t = setTimeout(() => setShown((n) => n + 1), 380);
+    return () => clearTimeout(t);
+  }, [shown, notes.length]);
 
   useEffect(() => {
     let alive = true;
@@ -137,18 +145,65 @@ export function LiveProgress({
         </div>
       ) : null}
 
-      {showNotes && reading && notes.length > 0 ? (
+      {showNotes && reading ? <LiveNotes notes={notes.slice(0, shown)} refImages={refImages} stage={s?.stage ?? null} /> : null}
+    </div>
+  );
+}
+
+function LiveNotes({ notes, refImages, stage }: { notes: Note[]; refImages: Record<string, string>; stage: string | null }) {
+  const li = notes.filter((n) => n.source === "linkedin" || n.source === "linkedin_overall");
+  const ig = notes.filter((n) => n.source === "instagram" || n.source === "instagram_overall");
+  const photos = notes.filter((n) => n.source === "instagram_photo");
+  const waiting = (
+    <li className="flex items-center gap-2 text-sm text-faint">
+      <span className="typing">
+        <span />
+        <span />
+        <span />
+      </span>
+      reading…
+    </li>
+  );
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="card p-5">
-          <p className="label mb-3">The reading, live</p>
-          <ul className="space-y-2.5">
-            {notes
-              .filter((n) => n.source !== "instagram_photo")
-              .slice(-14)
-              .map((n) => (
-                <NoteLine key={n.id} n={n} thumb={n.ref ? refImages[n.ref] : undefined} />
-              ))}
+          <div className="mb-4 flex items-center gap-2 text-blue">
+            <LinkedInIcon size={16} /> <span className="font-semibold">Reading LinkedIn</span>
+            <span className="ml-auto text-xs text-faint">{li.length} notes</span>
+          </div>
+          <ul className="space-y-3">
+            {li.map((n) => (
+              <NoteLine key={n.id} n={n} />
+            ))}
+            {!li.some((n) => n.source === "linkedin_overall") ? waiting : null}
           </ul>
         </div>
+        <div className="card p-5">
+          <div className="mb-4 flex items-center gap-2 text-rose">
+            <InstagramIcon size={16} /> <span className="font-semibold">Reading Instagram</span>
+            <span className="ml-auto text-xs text-faint">{ig.length} notes</span>
+          </div>
+          {photos.length ? (
+            <div className="mb-4 grid grid-cols-4 gap-2">
+              {photos.map((n) =>
+                n.ref && refImages[n.ref] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={n.id} src={`/api/img/${refImages[n.ref]}`} alt="" title={`${n.quote} → ${n.observation}`} className="rise aspect-square w-full rounded-md object-cover" />
+                ) : null,
+              )}
+            </div>
+          ) : null}
+          <ul className="space-y-3">
+            {ig.map((n) => (
+              <NoteLine key={n.id} n={n} thumb={n.ref ? refImages[n.ref] : undefined} />
+            ))}
+            {!ig.some((n) => n.source === "instagram_overall") ? waiting : null}
+          </ul>
+        </div>
+      </div>
+      {stage === "Writing the profile" ? (
+        <div className="card shimmer p-5 text-center text-sm text-gold">Notes done. Now writing the profile from them: needs, hobbies, interests, values, personality…</div>
       ) : null}
     </div>
   );

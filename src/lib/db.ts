@@ -181,11 +181,19 @@ export function ensureSchema(): Promise<void> {
     globalForDb.__proximaSchema = (async () => {
       const c = await pool().connect();
       try {
-        // Serialise concurrent cold starts creating the schema.
-        await c.query("SELECT pg_advisory_lock(424242)");
+        // Fast path: schema already there (every warm deployment).
+        const r = await c.query(`SELECT to_regclass('public.rate') IS NOT NULL AS ok`);
+        if (r.rows[0]?.ok) return;
+        // First boot: serialise concurrent cold starts with a transaction-scoped
+        // lock (session locks don't survive Neon's transaction pooler).
+        await c.query("BEGIN");
+        await c.query("SELECT pg_advisory_xact_lock(424243)");
         await c.query(SCHEMA);
+        await c.query("COMMIT");
+      } catch (e) {
+        await c.query("ROLLBACK").catch(() => {});
+        throw e;
       } finally {
-        await c.query("SELECT pg_advisory_unlock(424242)").catch(() => {});
         c.release();
       }
     })().catch((e) => {
