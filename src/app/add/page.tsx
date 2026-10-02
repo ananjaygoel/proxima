@@ -1,9 +1,11 @@
+import { config } from "@/lib/config";
 import { AddForm } from "./form";
 
 export const metadata = { title: "Add a person" };
 
 export default async function AddPage({ searchParams }: { searchParams: Promise<{ invite?: string }> }) {
-  const { invite } = await searchParams;
+  const { invite: raw } = await searchParams;
+  const invite = raw && config.inviteCode && raw === config.inviteCode ? raw : null;
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <h1 className="h-serif text-4xl">Add a person</h1>
@@ -13,10 +15,10 @@ export default async function AddPage({ searchParams }: { searchParams: Promise<
       </p>
       {invite ? (
         <div className="card-2 mt-6 p-4 text-sm">
-          You were invited to the demo season. Your agent will date everyone else in it once the season starts.
+          You&apos;re invited to the demo season. As soon as your profile is written, your agent starts dating everyone else in the season.
         </div>
       ) : null}
-      <AddForm invite={invite ?? null} />
+      <AddForm invite={invite} />
       <div className="mt-10 grid gap-4 text-sm text-muted md:grid-cols-3">
         <div className="card-2 p-4">
           <div className="font-semibold text-text">~1 minute</div>
