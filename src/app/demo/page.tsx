@@ -1,14 +1,22 @@
 import Link from "next/link";
 import { Avatar, DemoNote } from "@/components/ui";
 import { q } from "@/lib/db";
-import { roster, stats } from "@/lib/views";
+import { roster } from "@/lib/views";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "The demo season" };
 
 // The finished example, already run: a guided path through it.
 export default async function DemoPage() {
-  const [s, people] = await Promise.all([stats(), roster()]);
+  const [people, counts] = await Promise.all([
+    roster(),
+    q<{ speed: number; full: number }>(
+      `SELECT count(*) FILTER (WHERE d.kind='speed')::int AS speed, count(*) FILTER (WHERE d.kind='full')::int AS full
+       FROM dates d JOIN people pa ON pa.id=d.a_id AND pa.cohort='demo' JOIN people pb ON pb.id=d.b_id AND pb.cohort='demo'
+       WHERE d.status='done' AND d.origin <> 'live'`,
+    ),
+  ]);
+  const s = counts[0] ?? { speed: 0, full: 0 };
   const demo = people.filter((p) => p.cohort === "demo" && p.status === "ready");
   const best = await q<{ id: string; a_id: string; b_id: string; avg: number }>(
     `SELECT d.id, d.a_id, d.b_id, (d.fit_ab + d.fit_ba) / 2.0 AS avg FROM dates d
@@ -44,8 +52,8 @@ export default async function DemoPage() {
       <p className="label">The demo season</p>
       <h1 className="h-serif mt-2 text-4xl">{demo.length} people. Their agents already went out.</h1>
       <p className="mt-3 max-w-3xl text-lg text-muted">
-        Each person was added as two links: a LinkedIn and a public Instagram. Their agents read them, wrote their profiles, went on {s.speed} speed
-        dates and {s.full} first dates, and ranked who fits each person best. Nothing here needs typing; follow the steps.
+        Each person is two sources, a LinkedIn and an Instagram. Their agents read them, wrote their profiles, went on {s.speed} speed dates and{" "}
+        {s.full} first dates, and ranked who fits each person best. Nothing here needs typing; follow the steps.
       </p>
       {demo.some((p) => p.synthetic) ? (
         <div className="mt-6">
