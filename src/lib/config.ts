@@ -12,13 +12,14 @@ export const config = {
 
   apifyToken: process.env.APIFY_TOKEN ?? "",
 
-  // Models. Defaults follow the current Claude lineup; override per stage if you
-  // want a cheaper speed-dating round (e.g. MODEL_SPEED=claude-haiku-4-5).
+  // OpenAI models per stage. gpt-6.1-sol reads images, follows strict JSON
+  // schemas and has cheap cached input (each agent's dossier is re-read from
+  // cache on every turn). Set MODEL_SPEED=gpt-6-luna for a cheaper round 1.
   models: {
-    read: process.env.MODEL_READ ?? "claude-opus-5-5",
-    date: process.env.MODEL_DATE ?? "claude-opus-5-5",
-    speed: process.env.MODEL_SPEED ?? "claude-opus-5-5",
-    debrief: process.env.MODEL_DEBRIEF ?? "claude-opus-5-5",
+    read: process.env.MODEL_READ ?? "gpt-6.1-sol",
+    date: process.env.MODEL_DATE ?? "gpt-6.1-sol",
+    speed: process.env.MODEL_SPEED ?? "gpt-6.1-sol",
+    debrief: process.env.MODEL_DEBRIEF ?? "gpt-6.1-sol",
   },
 
   // How many full dates each person gets after the speed-dating round.

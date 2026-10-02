@@ -1,11 +1,11 @@
 import { q } from "./db";
 
-// $ per million tokens (input, output). Cache reads/writes priced off input.
-const PRICES: Record<string, [number, number]> = {
-  "claude-opus-5-5": [4, 20],
-  "claude-sonnet-5-5": [2, 10],
-  "claude-haiku-4-5": [1, 5],
-  "claude-fable-5-1": [10, 50],
+// $ per million tokens: [input, cached input, output].
+const PRICES: Record<string, [number, number, number]> = {
+  "gpt-6.1-sol": [2, 0.1, 10],
+  "gpt-6-sol": [2, 0.2, 10],
+  "gpt-6-luna": [0.1, 0.01, 0.5],
+  "gpt-6-astra": [10, 1, 50],
 };
 
 export async function usageSummary() {
@@ -15,8 +15,8 @@ export async function usageSummary() {
      FROM usage GROUP BY 1,2 ORDER BY 1,2`,
   );
   return rows.map((r) => {
-    const [pin, pout] = PRICES[r.model] ?? [4, 20];
-    const usd = (r.input * pin + r.cache_write * pin * 1.25 + r.cache_read * pin * 0.05 + r.output * pout) / 1e6;
+    const [pin, pcached, pout] = PRICES[r.model] ?? [2, 0.1, 10];
+    const usd = (r.input * pin + r.cache_read * pcached + r.output * pout) / 1e6;
     return { ...r, usd: Math.round(usd * 100) / 100 };
   });
 }

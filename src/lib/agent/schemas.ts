@@ -144,7 +144,9 @@ export type Scenes = z.infer<typeof Scenes>;
 
 export const Turn = z.object({
   say: z.string().describe("What you say out loud. 1-3 sentences, natural spoken English, like a real date."),
-  gesture: z.string().describe('Optional tiny stage direction, present tense, third person, e.g. "laughs and turns the menu around". "" if none.'),
+  gesture: z
+    .string()
+    .describe('Optional stage direction, present tense, tied to the setting (e.g. "turns the menu around", "points at the heron by the lake"). Leave "" most turns; never use "smiles".'),
   private_note: z
     .string()
     .describe("Your private read, for your person only (the other agent never sees this): what you just learned and what it means for them. One sentence."),

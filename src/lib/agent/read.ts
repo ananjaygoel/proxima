@@ -1,10 +1,10 @@
-import type Anthropic from "@anthropic-ai/sdk";
 import { config } from "../config";
 import { q } from "../db";
-import { imageBlock, structured } from "../llm";
+import { imageBlock, structured, type Block } from "../llm";
 import { loadImageB64 } from "../scrape/images";
 import type { InstagramData, LinkedInData } from "../types";
 import { InstagramReading, LinkedInReading, Profile, type Note } from "./schemas";
+
 
 // The reading: three passes.
 //   1. LinkedIn pass  (text)            -> evidence notes
@@ -113,6 +113,7 @@ async function readLinkedIn(personId: string, li: LinkedInData) {
     model: config.models.read,
     purpose: "read:linkedin",
     system: READER_SYSTEM,
+    cacheKey: "reader",
     effort: "medium",
     schema: LinkedInReading,
     content: `Read this person's public LinkedIn. Cite items by their [ref] labels.\n\n<linkedin>\n${renderLinkedIn(li)}\n</linkedin>`,
@@ -123,7 +124,7 @@ async function readLinkedIn(personId: string, li: LinkedInData) {
 }
 
 async function readInstagram(personId: string, ig: InstagramData) {
-  const content: Anthropic.Beta.BetaContentBlockParam[] = [
+  const content: Block[] = [
     { type: "text", text: `Read this person's public Instagram. Cite items by their [ref] labels. Each post's photo follows its caption.\n\n<instagram>\n${renderInstagramHeader(ig)}` },
   ];
   for (const p of ig.posts) {
@@ -138,6 +139,7 @@ async function readInstagram(personId: string, ig: InstagramData) {
     model: config.models.read,
     purpose: "read:instagram",
     system: READER_SYSTEM,
+    cacheKey: "reader",
     effort: "medium",
     schema: InstagramReading,
     content,
@@ -155,11 +157,22 @@ async function readInstagram(personId: string, ig: InstagramData) {
   return out;
 }
 
-export async function readPerson(personId: string, li: LinkedInData, ig: InstagramData, onStage?: (s: string) => Promise<void>) {
+// Passes 1 + 2: read both sources (in parallel) and store the notes.
+export async function readSources(personId: string, li: LinkedInData, ig: InstagramData) {
   await q(`DELETE FROM notes WHERE person_id=$1`, [personId]);
-  await onStage?.("Reading LinkedIn and Instagram");
-  const [liR, igR] = await Promise.all([readLinkedIn(personId, li), readInstagram(personId, ig)]);
-  await onStage?.("Writing the profile");
+  await Promise.all([readLinkedIn(personId, li), readInstagram(personId, ig)]);
+}
+
+// Pass 3: write the profile from the stored notes.
+export async function writeProfile(personId: string, li: LinkedInData, ig: InstagramData) {
+  const notes = await q<{ source: string; ref: string | null; quote: string | null; observation: string; category: string | null }>(
+    `SELECT source, ref, quote, observation, category FROM notes WHERE person_id=$1 ORDER BY id`,
+    [personId],
+  );
+  if (!notes.length) throw new Error("No reading notes yet");
+  const by = (src: string) => notes.filter((n) => n.source === src);
+  const overall = (src: string) => by(src)[0]?.observation ?? "";
+  const notesText = (src: string) => by(src).map((n) => `- [${n.ref}] (${n.category}) "${n.quote}" → ${n.observation}`).join("\n");
 
   const current = li.experience[0];
   const facts = [
@@ -174,17 +187,15 @@ export async function readPerson(personId: string, li: LinkedInData, ig: Instagr
     .filter(Boolean)
     .join("\n");
 
-  const notesText = (label: string, notes: Note[]) => notes.map((n) => `- [${n.ref}] (${n.category}) "${n.quote}" → ${n.observation}`).join("\n") + `\n(${label})`;
-
-  const profile = await structured({
+  return structured({
     model: config.models.read,
     purpose: "read:profile",
     system: PROFILER_SYSTEM,
-    effort: "high",
+    cacheKey: "profiler",
+    effort: "medium",
     schema: Profile,
-    content: `<facts>\n${facts}\n</facts>\n\n<linkedin_reading>\n${notesText(liR.overall, liR.notes)}\n</linkedin_reading>\n\n<instagram_reading>\nPhotos:\n${igR.posts
-      .map((p) => `- [${p.ref}] ${p.what_i_see} → ${p.signal}`)
-      .join("\n")}\n\n${notesText(igR.overall, igR.notes)}\n</instagram_reading>\n\nWrite this person's dating profile.`,
+    content: `<facts>\n${facts}\n</facts>\n\n<linkedin_reading>\n${notesText("linkedin")}\nOverall: ${overall("linkedin_overall")}\n</linkedin_reading>\n\n<instagram_reading>\nPhotos:\n${by("instagram_photo")
+      .map((p) => `- [${p.ref}] ${p.quote} → ${p.observation}`)
+      .join("\n")}\n\n${notesText("instagram")}\nOverall: ${overall("instagram_overall")}\n</instagram_reading>\n\nWrite this person's dating profile.`,
   });
-  return profile;
 }

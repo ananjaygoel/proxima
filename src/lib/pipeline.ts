@@ -3,7 +3,7 @@ import { config } from "./config";
 import { one, q } from "./db";
 import { claim, complete, enqueue, fail, heartbeat, reschedule, PRIORITY, type Job } from "./jobs";
 import { getPerson, getProfiles, getSources, pairKey, saveSource, setStatus } from "./repo";
-import { readPerson } from "./agent/read";
+import { readSources, writeProfile } from "./agent/read";
 import { hash, runDate } from "./agent/date";
 import { fetchLinkedIn } from "./scrape/linkedin";
 import { fetchInstagram, PrivateInstagramError } from "./scrape/instagram";
@@ -81,7 +81,18 @@ async function handleRead(personId: string) {
   const src = await getSources(personId);
   if (!src.linkedin || !src.instagram) throw new PersonError("Sources missing; re-run the scrape.");
   await setStatus(personId, "reading", "Reading LinkedIn and Instagram");
-  const profile = await readPerson(personId, src.linkedin, src.instagram, (s) => setStatus(personId, "reading", s));
+  await readSources(personId, src.linkedin, src.instagram);
+  await setStatus(personId, "reading", "Writing the profile");
+  await enqueue("profile", { personId }, { dedupe: `profile:${personId}` });
+}
+
+async function handleProfile(personId: string) {
+  const p = await getPerson(personId);
+  if (!p) return;
+  const src = await getSources(personId);
+  if (!src.linkedin || !src.instagram) throw new PersonError("Sources missing; re-run the scrape.");
+  await setStatus(personId, "reading", "Writing the profile");
+  const profile = await writeProfile(personId, src.linkedin, src.instagram);
   await q(
     `INSERT INTO profiles (person_id, data, model) VALUES ($1,$2::jsonb,$3)
      ON CONFLICT (person_id) DO UPDATE SET data=EXCLUDED.data, model=EXCLUDED.model, created_at=now()`,
@@ -94,6 +105,7 @@ async function handleRead(personId: string) {
   }
   await setStatus(personId, "ready", null);
   if (p.cohort === "guest") await enqueue("plan_guest", { personId }, { dedupe: `plan_guest:${personId}` });
+  else await enqueue("plan_demo_join", { personId }, { dedupe: `plan_demo_join:${personId}` });
 }
 
 // ---------------- dates ----------------
@@ -138,6 +150,18 @@ async function handlePlanGuest(job: Job) {
   for (const r of top) await createDate("full", "guest", personId, r.otherId, PRIORITY.full_date - 5);
 }
 
+// Demo season runs itself: a newly ready demo person speed-dates everyone
+// already in the pool; first dates are booked once the speed dates settle.
+async function handlePlanDemoJoin(personId: string) {
+  const pool = (await readyPool(["demo"])).filter((x) => x.id !== personId);
+  for (const other of pool) {
+    const [a, b] = hash(pairKey(personId, other.id)) % 2 === 0 ? [personId, other.id] : [other.id, personId];
+    await createDate("speed", "season", a, b);
+  }
+  await enqueue("plan_season_full", {}, { dedupe: "plan_season_full", delaySec: 30 });
+}
+
+// Admin/CLI: fill in any missing speed dates (idempotent).
 export async function startSeason() {
   const pool = await readyPool(["demo"]);
   let created = 0;
@@ -181,6 +205,12 @@ async function handle(job: Job): Promise<"done" | "wait"> {
     case "read":
       await handleRead(job.payload.personId);
       return "done";
+    case "profile":
+      await handleProfile(job.payload.personId);
+      return "done";
+    case "plan_demo_join":
+      await handlePlanDemoJoin(job.payload.personId);
+      return "done";
     case "speed_date":
     case "full_date":
       await runDate(job.payload.dateId);
@@ -194,7 +224,7 @@ async function handle(job: Job): Promise<"done" | "wait"> {
 
 async function onFinalFailure(job: Job, err: unknown) {
   const msg = String((err as Error)?.message ?? err).slice(0, 400);
-  if (job.type === "scrape" || job.type === "read") await setStatus(job.payload.personId, "error", null, msg);
+  if (job.type === "scrape" || job.type === "read" || job.type === "profile") await setStatus(job.payload.personId, "error", null, msg);
 }
 
 export async function processOne(): Promise<boolean> {

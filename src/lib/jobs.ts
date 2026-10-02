@@ -5,7 +5,7 @@ import { one, q } from "./db";
 // so any number of workers (Vercel ticks, the local worker script) can drain
 // it in parallel. A crashed worker's job is re-claimed when its lease expires.
 
-export type JobType = "scrape" | "read" | "speed_date" | "full_date" | "plan_guest" | "plan_season_full";
+export type JobType = "scrape" | "read" | "profile" | "speed_date" | "full_date" | "plan_guest" | "plan_demo_join" | "plan_season_full";
 
 export type Job = {
   id: number;
@@ -19,6 +19,8 @@ export const PRIORITY: Record<JobType, number> = {
   full_date: 20, // overridden to 5 for live dates someone is watching
   scrape: 10,
   read: 15,
+  profile: 15,
+  plan_demo_join: 30,
   speed_date: 40,
   plan_guest: 60,
   plan_season_full: 90,
