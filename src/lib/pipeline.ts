@@ -141,7 +141,8 @@ async function handlePlanGuest(job: Job) {
   }
   // stage === "full": wait until this person's speed dates are finished
   const pending = await one<{ n: number }>(
-    `SELECT count(*)::int AS n FROM dates WHERE kind='speed' AND status IN ('queued','running') AND (a_id=$1 OR b_id=$1)`,
+    `SELECT count(*)::int AS n FROM dates d WHERE d.kind='speed' AND (d.a_id=$1 OR d.b_id=$1) AND (d.status IN ('queued','running')
+       OR (d.status='error' AND EXISTS (SELECT 1 FROM jobs j WHERE j.payload->>'dateId' = d.id AND j.status IN ('pending','running'))))`,
     [personId],
   );
   if ((pending?.n ?? 0) > 0) return "wait";
@@ -176,7 +177,11 @@ export async function startSeason() {
 }
 
 async function handlePlanSeasonFull() {
-  const pending = await one<{ n: number }>(`SELECT count(*)::int AS n FROM dates WHERE kind='speed' AND origin='season' AND status IN ('queued','running')`);
+  // Pending = any speed date not finished, including ones that failed and are waiting to retry.
+  const pending = await one<{ n: number }>(
+    `SELECT count(*)::int AS n FROM dates d WHERE d.kind='speed' AND d.origin='season' AND (d.status IN ('queued','running')
+       OR (d.status='error' AND EXISTS (SELECT 1 FROM jobs j WHERE j.payload->>'dateId' = d.id AND j.status IN ('pending','running'))))`,
+  );
   if ((pending?.n ?? 0) > 0) return "wait";
   const demo = await readyPool(["demo"]);
   const demoIds = new Set(demo.map((d) => d.id));
