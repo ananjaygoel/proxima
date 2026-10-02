@@ -11,7 +11,7 @@ import { q } from "./db";
 
 const globalForLlm = globalThis as unknown as { __openai?: OpenAI };
 function client(): OpenAI {
-  if (!globalForLlm.__openai) globalForLlm.__openai = new OpenAI({ maxRetries: 4, timeout: 240_000 });
+  if (!globalForLlm.__openai) globalForLlm.__openai = new OpenAI({ maxRetries: 1, timeout: 240_000 });
   return globalForLlm.__openai;
 }
 
@@ -39,6 +39,7 @@ export async function structured<S extends z.ZodType>(opts: {
   const name = opts.purpose.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60);
 
   let lastErr: unknown;
+  let rateLimited = 0;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await client().responses.parse({
@@ -61,7 +62,14 @@ export async function structured<S extends z.ZodType>(opts: {
       return res.output_parsed as z.infer<S>;
     } catch (e) {
       lastErr = e;
-      // Don't retry requests that can never succeed; the SDK already retried transport errors and 429s.
+      // Tokens-per-minute limit: back off (the window clears within a minute) without using up an attempt.
+      if (e instanceof OpenAI.RateLimitError && rateLimited < 8) {
+        rateLimited++;
+        attempt--;
+        await new Promise((r) => setTimeout(r, Math.min(30_000, 2000 * 2 ** rateLimited) * (0.6 + Math.random() * 0.8)));
+        continue;
+      }
+      // Don't retry requests that can never succeed.
       if (e instanceof OpenAI.APIError && e.status && e.status >= 400 && e.status < 500 && e.status !== 429) throw e;
       if (opts.maxTokens && String((e as Error).message).includes("max_output_tokens")) opts.maxTokens *= 2;
     }

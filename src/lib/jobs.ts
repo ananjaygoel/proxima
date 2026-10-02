@@ -58,6 +58,11 @@ export async function reschedule(id: number, delaySec: number) {
 
 export async function fail(job: Job, err: unknown, maxAttempts = 3): Promise<boolean> {
   const msg = String((err as Error)?.message ?? err).slice(0, 800);
+  if ((err as { status?: number })?.status === 429 || /rate limit/i.test(msg)) {
+    // Capacity, not a bug: try again in a minute without spending an attempt.
+    await q(`UPDATE jobs SET status='pending', attempts = attempts - 1, last_error=$2, run_after = now() + interval '60 seconds', lease_until=NULL WHERE id=$1`, [job.id, msg]);
+    return false;
+  }
   if (job.attempts < maxAttempts) {
     await q(`UPDATE jobs SET status='pending', last_error=$2, run_after = now() + make_interval(secs => $3), lease_until=NULL WHERE id=$1`, [
       job.id,
@@ -79,6 +84,39 @@ export async function pendingCount(): Promise<number> {
     `SELECT count(*)::int AS n FROM jobs WHERE (status='pending') OR (status='running' AND lease_until < now())`,
   );
   return r?.n ?? 0;
+}
+
+// ---- tick slots: at most MAX_TICKS serverless workers run at once ----
+export const MAX_TICKS = Number(process.env.MAX_TICKS ?? 2);
+
+// Claims a free slot (one whose holder hasn't renewed it for 30s). Returns its key or null.
+export async function claimTickSlot(): Promise<string | null> {
+  for (let i = 0; i < MAX_TICKS; i++) {
+    const key = `tick-slot-${i}`;
+    const r = await one<{ key: string }>(
+      `INSERT INTO meta (key, value, updated_at) VALUES ($1, '{}'::jsonb, now())
+       ON CONFLICT (key) DO UPDATE SET updated_at = now() WHERE meta.updated_at < now() - interval '30 seconds'
+       RETURNING key`,
+      [key],
+    );
+    if (r) return key;
+  }
+  return null;
+}
+
+export async function renewTickSlot(key: string) {
+  await q(`UPDATE meta SET updated_at = now() WHERE key = $1`, [key]);
+}
+
+export async function releaseTickSlot(key: string) {
+  await q(`UPDATE meta SET updated_at = now() - interval '1 hour' WHERE key = $1`, [key]);
+}
+
+export async function freeTickSlot(): Promise<boolean> {
+  const r = await one<{ busy: number }>(
+    `SELECT count(*)::int AS busy FROM meta WHERE key LIKE 'tick-slot-%' AND updated_at >= now() - interval '30 seconds'`,
+  );
+  return (r?.busy ?? 0) < MAX_TICKS;
 }
 
 // ---- tick heartbeat: lets page polls know whether a worker is alive ----

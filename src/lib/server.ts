@@ -2,7 +2,7 @@ import { cookies, headers } from "next/headers";
 import { nanoid } from "nanoid";
 import { config } from "./config";
 import { one, q } from "./db";
-import { pendingCount, tickUrl, workerAliveWithin } from "./jobs";
+import { freeTickSlot, pendingCount, tickUrl, workerAliveWithin } from "./jobs";
 
 // Request helpers shared by the API routes.
 
@@ -45,6 +45,7 @@ export async function kick(force = false) {
   if (process.env.DISABLE_AUTO_TICK === "1") return;
   try {
     if (!force && (await workerAliveWithin(20))) return;
+    if (!(await freeTickSlot())) return;
     if ((await pendingCount()) === 0) return;
     // mark alive now so concurrent polls don't all start ticks
     await q(`INSERT INTO meta (key, value, updated_at) VALUES ('tick','{}'::jsonb, now()) ON CONFLICT (key) DO UPDATE SET updated_at = now()`);
